@@ -1,13 +1,8 @@
-
-
 import java.util.ArrayList;
 import java.util.List;
 
-
-
 public class Main {
 
-    
     static int N; // size of the board for now
     private static int TOTAL_MOVES;
    
@@ -65,28 +60,12 @@ public class Main {
         } 
     }
 
-
-
-    // Print the board
-    public static void printBoard(int[][] chessBoard) {
-        for (int[] row : chessBoard) {
-            for (int cell : row) {
-                System.out.printf("%2d ", cell);
-            }
-            System.out.println();
-        }
-    }
-
     public static State DFS(int[][] chessBoard, State current, int moveCount) {
 
         // Check if goal state
         if (moveCount == TOTAL_MOVES) {
             return current; // All cells are visited, solution found
         }
-
-        // System.out.println("Move: " + moveCount);
-       // printBoard(chessBoard);
-
         // Explore all possible moves
         for (int i = 0; i < MOVES.length; i++) {
             int nextRow = current.row + MOVES[i][0];
@@ -107,9 +86,6 @@ public class Main {
 
         return null; // No solution found
     }
-    
-
-
 
     // Check if a cell is within bounds and unvisited
     private static boolean isSafe(int row, int col, int[][] chessBoard) {
@@ -139,7 +115,15 @@ public class Main {
         System.out.println("END");
     }
 
-
+    // Print the board
+    public static void printBoard(int[][] chessBoard) {
+        for (int[] row : chessBoard) {
+            for (int cell : row) {
+                System.out.printf("%2d ", cell);
+            }
+            System.out.println();
+        }
+    }
 }
     
 
