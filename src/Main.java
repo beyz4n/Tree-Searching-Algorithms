@@ -26,38 +26,37 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        N = 7; // 8x8 chessboard
+        N = 8; // 8x8 chessboard
         TOTAL_MOVES = N * N;
         int[][] chessBoard = new int[N][N];
-        boolean solutionFound = false;
+        // boolean solutionFound = false;
+   
+        //for (int startRow = 0; startRow < N; startRow++) {
+        //    for (int startCol = 0; startCol < N; startCol++) {
 
-        // TODO: loopa gerek olmayabilir de
-        for (int startRow = 0; startRow < N; startRow++) {
-            for (int startCol = 0; startCol < N; startCol++) {
+        int startRow = 0;
+        int startCol = 0;
 
-        // int startRow = 0;
-        // int startCol = 0;
+        chessBoard[startRow][startCol] = 1; // Start position marked as visited (1)
 
-                chessBoard[startRow][startCol] = 1; // Start position marked as visited (1)
+        State startState = new State(startRow, startCol, null);
 
-                State startState = new State(startRow, startCol, null);
+        State result = DFS(chessBoard, startState, 1);
 
-                State result = DFS(chessBoard, startState, 1);
-
-                if (result != null) {
-                    List<State> path = backtrace(result);
-                    printPath(path);
-                    printBoard(chessBoard);
-                    solutionFound = true;
-                    break;
-                } else {
-                    System.out.println("No solution found.");
-                }
-            }
-            if (solutionFound) {
-                break;
-            }
-        } 
+        if (result != null) {
+            List<State> path = backtrace(result);
+            printPath(path);
+            printBoard(chessBoard);
+            // solutionFound = true;
+            // break;
+        } else {
+            System.out.println("No solution found.");
+        }
+    
+    // if (solutionFound) {
+    //     break;
+    // }
+        
     }
 
     public static State DFS(int[][] chessBoard, State current, int moveCount) {
