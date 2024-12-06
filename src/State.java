@@ -7,8 +7,7 @@ public class State {
             this.x = x;
             this.y = y;
             this.parent = parent;
-            
         }
-    
+
 }
 
