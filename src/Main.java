@@ -35,9 +35,8 @@ static int depth = 0;
                 solutionFound = knightTourSearchMethodOne(boardSize);
                 System.out.println(solutionFound);
             }
-            else if (searchMethod.equals("d")) { // d dfs için diye düşündüm ama emin de değilim
+            else if (searchMethod.equals("b")) { 
                solutionFound = preperationForDFS(boardSize);
-
             }
         } catch (OutOfMemoryError e) {
             System.out.println("Out of Memory");
