@@ -35,9 +35,8 @@ static int depth = 0;
                 solutionFound = knightTourSearchMethodOne(boardSize);
                 System.out.println(solutionFound);
             }
-            else if (searchMethod.equals("d")) { // d dfs için diye düşündüm ama emin de değilim
+            else if (searchMethod.equals("b")) { 
                solutionFound = preperationForDFS(boardSize);
-
             }
         } catch (OutOfMemoryError e) {
             System.out.println("Out of Memory");
@@ -145,24 +144,26 @@ static int depth = 0;
 
         totalMoves = boardSize * boardSize;
         int[][] chessBoard = new int[boardSize][boardSize];
-
-        int startRow = 0;
-        int startCol = 0;
-
-        chessBoard[startRow][startCol] = 1; // Start position marked as visited (1)
-
-        State startState = new State(startRow, startCol, null);
-
-        State result = DFS(chessBoard, startState, 1, boardSize);
-
-        if (result != null) {
-            List<State> path = backtrace(result);
-            printPath(path);
-            printBoard(chessBoard);
-            return true;
+        
+        boolean solutionFound = false;
+        for (int startRow = 0; startRow < boardSize; startRow++) {
+            for (int startCol = 0; startCol < boardSize; startCol++) {
+                chessBoard[startRow][startCol] = 1; // Start position marked as visited (1)
+                State startState = new State(startRow, startCol, null);
+                State result = DFS(chessBoard, startState, 1, boardSize);
+                if (result != null) {
+                    List<State> path = backtrace(result);
+                    printPath(path);
+                    printBoard(chessBoard);
+                    solutionFound = true;
+                    break;
+                }
+            }
+            if (solutionFound) {
+                break;
+            }
         } 
-
-        return false;
+        return solutionFound;
     }
 
 
