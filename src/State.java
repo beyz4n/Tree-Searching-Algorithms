@@ -1,11 +1,14 @@
 
 public class State {
-        int x, y;
+        int row, col;
+        int moveCount;
         State parent;
 
-        State(int x, int y, State parent) {
-            this.x = x;
-            this.y = y;
+
+        State(int row, int col, State parent) {
+            this.row = row;
+            this.col = col;
+            this.moveCount = parent.moveCount + 1;
             this.parent = parent;
         }
 

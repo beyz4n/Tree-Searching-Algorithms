@@ -78,8 +78,8 @@ static int depth = 0;
         while (!queue.isEmpty()) {
             State current = queue.poll();
             for (int i = 0; i < 8; i++) {
-                int newX = current.x + dx[i];
-                int newY = current.y + dy[i];
+                int newX = current.row + dx[i];
+                int newY = current.col + dy[i];
                  if (isAvailable(newX, newY, boardSize )  ) {
                     State newState = new State(newX, newY, current);
                     if(!isInThePath(newState)){
@@ -89,7 +89,7 @@ static int depth = 0;
                  if(testPath(current, boardSize)){
                      ArrayList <State> path = constructPath(current);
                      for(int j = path.size() -1 ;  j >= 0 ;j--)
-                         System.out.println(path.get(j).x + ", " + path.get(j).y);
+                         System.out.println(path.get(j).row + ", " + path.get(j).col);
                      return true;
                  }
                  }
@@ -109,10 +109,10 @@ static int depth = 0;
     }
 
      public static boolean isInThePath(State newState){
-        int newX = newState.x;
-        int newY = newState.y;
+        int newX = newState.row;
+        int newY = newState.col;
          while (newState.parent != null) {
-             if (newX == newState.parent.x && newY == newState.parent.y) {
+             if (newX == newState.parent.row && newY == newState.parent.col) {
                  return true;
              }
              newState = newState.parent;
@@ -175,8 +175,8 @@ static int depth = 0;
         }
         // Explore all possible moves
         for (int i = 0; i < MOVES.length; i++) {
-            int nextRow = current.x + MOVES[i][0];
-            int nextCol = current.y + MOVES[i][1];
+            int nextRow = current.row + MOVES[i][0];
+            int nextCol = current.col + MOVES[i][1];
         
             if (isSafe(nextRow, nextCol, chessBoard, N)) {
                 // Mark the move as visited
@@ -216,7 +216,7 @@ static int depth = 0;
     private static void printPath(List<State> path) {
         System.out.println("Knight's Tour Path:");
         for (State state : path) {
-            System.out.printf("(%d, %d) -> ", state.y, state.x);
+            System.out.printf("(%d, %d) -> ", state.col, state.row);
         }
         System.out.println("END");
     }
