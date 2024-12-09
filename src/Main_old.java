@@ -143,7 +143,7 @@ public class Main_old {
         for (int startRow = 0; startRow < boardSize; startRow++) {
             for (int startCol = 0; startCol < boardSize; startCol++) {
                 chessBoard[startRow][startCol] = 1; // Start position marked as visited (1)
-                State startState = new State(startRow, startCol, null);
+                State startState = new State(startRow, startCol,  null);
                 State result = DFS(chessBoard, startState, 1, boardSize);
                 if (result != null) {
                     List<State> path = backtrace(result);
