@@ -7,33 +7,48 @@ public class Main {
             {2, -1}, {1, -2}, {-1, -2}, {-2, -1}
     };
 
-    private static int totalMoves;
+    private static int totalMoves; // TODO: will be deleted
     private static int method;
 
     public static void main(String[] args) {
+        
         boolean solutionFound = false;
+        
+        // Take the board size and search method from the user
         Scanner input = new Scanner(System.in);
         System.out.println("Enter a board size:");
         int boardSize = input.nextInt();
+
         Scanner input2 = new Scanner(System.in);
         System.out.println("Enter a search method:(a-d)");
         String searchMethod = input2.next();
-        totalMoves = boardSize * boardSize;
+
+       
+        totalMoves = boardSize * boardSize;  // Calculate the total moves
+
+        // Start position
+        int startRow = 0;
+        int startCol = 0;
+        State startState = new State(startRow, startCol, null);
+
+        // Start the timer
         long startTime = System.nanoTime();
+
         try {
             if (searchMethod.equals("a")) {
                 solutionFound = knightTourSearchMethodOne(boardSize);
                 System.out.println(solutionFound);
             } else if (searchMethod.equals("b")) {
                 method = 0;
-                solutionFound = preparationForDFS(boardSize);
+                solutionFound = preparationForDFS(boardSize, startState);
+
             } else if (searchMethod.equals("c")) {
                 method = 1;
-                solutionFound = preparationForDFS(boardSize);
+                solutionFound = preparationForDFS(boardSize, startState);
 
             } else if (searchMethod.equals("d")) {
                 method = 2;
-                solutionFound = preparationForDFS(boardSize);
+                solutionFound = preparationForDFS(boardSize, startState);
             } else {
                 System.out.println("Give the search method as a,b,c,d.");
             }
@@ -130,62 +145,60 @@ public class Main {
             state = state.parent;
             i--;
         }
-
         return i == 1;
     }
 
-    public static boolean preparationForDFS(int boardSize) {
-
-
-        int[][] chessBoard = new int[boardSize][boardSize];
+    public static boolean preparationForDFS(int boardSize, State startState) {
 
         boolean solutionFound = false;
-        for (int startRow = 0; startRow < boardSize; startRow++) {
-            for (int startCol = 0; startCol < boardSize; startCol++) {
-                chessBoard[startRow][startCol] = 1; // Start position marked as visited (1)
-                State startState = new State(startRow, startCol, null);
-                State result = DFS(chessBoard, startState, 1, boardSize);
-                if (result != null) {
-                    List<State> path = backtrace(result);
-                    printPath(path);
-                    printBoard(chessBoard);
-                    solutionFound = true;
-                    break;
-                }
-            }
-            if (solutionFound) {
-                break;
-            }
-        }
-        return solutionFound;
+        State result = DFS(boardSize, startState);
+
+        if (result != null) {
+            List<State> path = backtrace(result);
+            printPath(path);
+            solutionFound = true;
+        } 
+        return solutionFound; 
     }
 
 
-    public static State DFS(int[][] chessBoard, State current, int moveCount, int N) {
+    public static State DFS(int boardSize, State startState) {
+        int moveCount = 1; // TODO: will be deleted
+        State current = startState; // TODO: will be deleted
+        int chessBoard[][] = new int[boardSize][boardSize]; // TODO: will be deleted
 
-        // Check if goal state
-        if (moveCount == totalMoves) {
-            return current; // All cells are visited, solution found
-        }
+        // Initialize frontier with start state of the problem
+        Stack<State> frontier = new Stack<>();
+        frontier.push(startState);
+
         // If it is DFS, then method is 0 and does the following
         // Explore all possible moves
         if (method == 0) {
-            for (int i = 0; i < MOVES.length; i++) {
-                int nextRow = current.row + MOVES[i][0];
-                int nextCol = current.col + MOVES[i][1];
+        while (!frontier.isEmpty()) {
+            // Chose a leaf node and remove it from the frontier
+            State currentState = frontier.pop(); 
 
-                if (isSafe(nextRow, nextCol, chessBoard, N)) {
-                    // Mark the move as visited
-                    chessBoard[nextRow][nextCol] = moveCount + 1;
-                    State child = new State(nextRow, nextCol, current); // Create new state with parent
-                    State result = DFS(chessBoard, child, moveCount + 1, N); // Recursive call
-                    if (result != null) {
-                        return result; // Solution found
-                    }
-                    chessBoard[nextRow][nextCol] = 0; // Backtrack
-                }
-
+            // Goal state check
+            if (currentState.moveCount == totalMoves) {
+                return currentState; // Solution found
             }
+
+            // Expand current node and add resulting nodes to the frontier
+            for (int[] move : MOVES) {
+                int nextRow = currentState.row + move[0];
+                int nextCol = currentState.col + move[1];
+
+               // Check validity of the move
+               if (isAvailable(nextRow, nextCol, boardSize)) {
+                State child = new State(nextRow, nextCol, currentState);
+                if (!isInThePath(child)) { // Avoid revisiting
+                    frontier.push(child);
+                }
+            }
+            }
+        }
+
+
             // If it is DFS with Heuristic h1b, then method is 1 and does the following
         } else if (method == 1) {
             // Created a priority queue that has row, col, priority as a structure
@@ -197,9 +210,9 @@ public class Main {
                 int nextCol = current.col + MOVES[i][1];
 
                 // If safe
-                if (isSafe(nextRow, nextCol, chessBoard, N)) {
+                if (isSafe(nextRow, nextCol, chessBoard, boardSize)) {
                     // Calculate h1b and put it to priority queue
-                    int h1b = calculateH1b(chessBoard, nextRow, nextCol, N);
+                    int h1b = calculateH1b(chessBoard, nextRow, nextCol, boardSize);
                     priorityQueue.add(new int[]{nextRow, nextCol, h1b});
                 }
 
@@ -214,7 +227,7 @@ public class Main {
                 // Make it visited
                 chessBoard[nextBestRow][nextBestCol] = moveCount + 1;
                 State child = new State(nextBestRow, nextBestCol, current); // Create new state with parent
-                State result = DFS(chessBoard, child, moveCount + 1, N); // Recursive call
+                State result = DFS(boardSize, startState); // Recursive call
                 if (result != null) {
                     return result; // Solution found
                 }
@@ -242,16 +255,16 @@ public class Main {
                 int nextCol = current.col + MOVES[i][1];
 
                 // If safe
-                if (isSafe(nextRow, nextCol, chessBoard, N)) {
+                if (isSafe(nextRow, nextCol, chessBoard, boardSize)) {
                     // Calculate h1b and add the distance to the corners; add it to priority queue
-                    int h1b = calculateH1b(chessBoard, nextRow, nextCol, N);
+                    int h1b = calculateH1b(chessBoard, nextRow, nextCol, boardSize);
 
                     // Calculate distances to corners 0,0 ; 0,N-1 ; N-1,0; N-1;N-1
                     int[] cornerDistances = {
                             Math.abs(nextRow) + Math.abs(nextCol),              // Top-left corner
-                            Math.abs(nextRow) + Math.abs(nextCol - (N - 1)),        // Top-right corner
-                            Math.abs(nextRow - (N - 1)) + Math.abs(nextCol),        // Bottom-left corner
-                            Math.abs(nextRow - (N - 1)) + Math.abs(nextCol - (N - 1))   // Bottom-right corner
+                            Math.abs(nextRow) + Math.abs(nextCol - (boardSize - 1)),        // Top-right corner
+                            Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol),        // Bottom-left corner
+                            Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol - (boardSize - 1))   // Bottom-right corner
                     };
 
                     // Find the minimum distance to the corners
@@ -276,7 +289,7 @@ public class Main {
                 // Make it visited
                 chessBoard[nextBestRow][nextBestCol] = moveCount + 1;
                 State child = new State(nextBestRow, nextBestCol, current); // Create new state with parent
-                State result = DFS(chessBoard, child, moveCount + 1, N); // Recursive call
+                State result = DFS(boardSize, startState); // Recursive call
                 if (result != null) {
                     return result; // Solution found
                 }
@@ -312,6 +325,7 @@ public class Main {
         return options;
     }
 
+    // TODO: isSafe method will be deleted
     // Check if a cell is within bounds and unvisited
     private static boolean isSafe(int row, int col, int[][] chessBoard, int N) {
 
@@ -323,32 +337,24 @@ public class Main {
         return isPositionInBoard && notVisited;
     }
 
+    // Backtrack to find the path
     private static List<State> backtrace(State state) {
         List<State> path = new ArrayList<>();
         while (state != null) {
-            path.add(0, state); // Add to the beginning to reverse order
+            path.add(0, state); 
             state = state.parent;
         }
         return path;
     }
 
-    private static void printPath(List<State> path) {
-        System.out.println("Knight's Tour Path:");
-        for (State state : path) {
-            System.out.printf("(%d, %d) -> ", state.col, state.row);
-        }
-        System.out.println("END");
+   // Print the path 
+   private static void printPath(List<State> path) {
+    System.out.println("Knight's Tour Path:");
+    for (State state : path) {
+        System.out.printf("(%d, %d) -> ", state.row, state.col);
     }
-
-    // Print the board
-    public static void printBoard(int[][] chessBoard) {
-        for (int[] row : chessBoard) {
-            for (int cell : row) {
-                System.out.printf("%2d ", cell);
-            }
-            System.out.println();
-        }
-    }
+    System.out.println("END");
+}
 }
     
 

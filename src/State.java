@@ -1,15 +1,14 @@
 
 public class State {
-        int row, col;
-        int moveCount;
-        State parent;
+    int row, col;
+    int moveCount = 0;
+    State parent;
 
-        State(int row, int col, State parent) {
-            this.row = row;
-            this.col = col;
-            this.moveCount = parent.moveCount + 1;
-            this.parent = parent;
-        }
-
+    State(int row, int col, State parent) {
+        this.row = row;
+        this.col = col;
+        this.parent = parent;
+        this.moveCount = (parent == null) ? 1 : parent.moveCount + 1; // Update move count
+    }
 }
 
