@@ -62,7 +62,7 @@ public class Main_old {
         Queue<State> nodes = new LinkedList<>();
 
         int[] startingPosition = {0, 0};
-        nodes.add(new State(startingPosition[0], startingPosition[1], null));
+        nodes.add(new State(startingPosition[0], startingPosition[1], null, new BitSet(0)));
 
         boolean solution = breadthFirstSearch(boardSize, dx, dy, nodes);
         return solution;
@@ -76,7 +76,7 @@ public class Main_old {
                 int newX = current.row + dx[i];
                 int newY = current.col + dy[i];
                 if (isAvailable(newX, newY, boardSize)) {
-                    State newState = new State(newX, newY, current);
+                    State newState = new State(newX, newY, current, new BitSet(0));
                     if (!isInThePath(newState)) {
                         queue.add(newState);
                     }
@@ -143,7 +143,7 @@ public class Main_old {
         for (int startRow = 0; startRow < boardSize; startRow++) {
             for (int startCol = 0; startCol < boardSize; startCol++) {
                 chessBoard[startRow][startCol] = 1; // Start position marked as visited (1)
-                State startState = new State(startRow, startCol,  null);
+                State startState = new State(startRow, startCol, null, new BitSet(0));
                 State result = DFS(chessBoard, startState, 1, boardSize);
                 if (result != null) {
                     List<State> path = backtrace(result);
@@ -177,7 +177,7 @@ public class Main_old {
                 if (isSafe(nextRow, nextCol, chessBoard, N)) {
                     // Mark the move as visited
                     chessBoard[nextRow][nextCol] = moveCount + 1;
-                    State child = new State(nextRow, nextCol, current); // Create new state with parent
+                    State child = new State(nextRow, nextCol, current, new BitSet(0)); // Create new state with parent
                     State result = DFS(chessBoard, child, moveCount + 1, N); // Recursive call
                     if (result != null) {
                         return result; // Solution found
@@ -213,7 +213,7 @@ public class Main_old {
 
                 // Make it visited
                 chessBoard[nextBestRow][nextBestCol] = moveCount + 1;
-                State child = new State(nextBestRow, nextBestCol, current); // Create new state with parent
+                State child = new State(nextBestRow, nextBestCol, current, new BitSet(0)); // Create new state with parent
                 State result = DFS(chessBoard, child, moveCount + 1, N); // Recursive call
                 if (result != null) {
                     return result; // Solution found
@@ -275,7 +275,7 @@ public class Main_old {
 
                 // Make it visited
                 chessBoard[nextBestRow][nextBestCol] = moveCount + 1;
-                State child = new State(nextBestRow, nextBestCol, current); // Create new state with parent
+                State child = new State(nextBestRow, nextBestCol, current, new BitSet(0)); // Create new state with parent
                 State result = DFS(chessBoard, child, moveCount + 1, N); // Recursive call
                 if (result != null) {
                     return result; // Solution found

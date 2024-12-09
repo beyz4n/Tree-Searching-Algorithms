@@ -9,6 +9,7 @@ public class Main {
 
     private static int totalMoves; // TODO: will be deleted
     private static int method;
+    private static boolean isSolutionWithBitSet = false;
 
     public static void main(String[] args) {
         
@@ -23,13 +24,23 @@ public class Main {
         System.out.println("Enter a search method:(a-d)");
         String searchMethod = input2.next();
 
-       
+        Scanner input3 = new Scanner(System.in);
+        System.out.println("If you want to use BitSet, enter '1' otherwise enter '0':");
+        String bitSetInput = input3.next();
+
+        if (bitSetInput.equals("1")) {
+            isSolutionWithBitSet = true;
+        } else {
+            isSolutionWithBitSet = false;
+        }
+
+
         totalMoves = boardSize * boardSize;  // Calculate the total moves
 
         // Start position
         int startRow = 0;
         int startCol = 0;
-        State startState = new State(startRow, startCol, null);
+        State startState = new State(startRow, startCol, null, new BitSet(boardSize * boardSize)); // Create start state
 
         // Start the timer
         long startTime = System.nanoTime();
@@ -39,7 +50,7 @@ public class Main {
                 solutionFound = knightTourSearchMethodOne(boardSize);
                 System.out.println(solutionFound);
             } else if (searchMethod.equals("b")) {
-                method = 0;
+                method = 0;  
                 solutionFound = preparationForDFS(boardSize, startState);
 
             } else if (searchMethod.equals("c")) {
@@ -77,7 +88,7 @@ public class Main {
         Queue<State> nodes = new LinkedList<>();
 
         int[] startingPosition = {0, 0};
-        nodes.add(new State(startingPosition[0], startingPosition[1], null));
+        nodes.add(new State(startingPosition[0], startingPosition[1], null, new BitSet(0)));
 
         boolean solution = breadthFirstSearch(boardSize, dx, dy, nodes);
         return solution;
@@ -91,7 +102,7 @@ public class Main {
                 int newX = current.row + dx[i];
                 int newY = current.col + dy[i];
                 if (isAvailable(newX, newY, boardSize)) {
-                    State newState = new State(newX, newY, current);
+                    State newState = new State(newX, newY, current, new BitSet(0));
                     if (!isInThePath(newState)) {
                         queue.add(newState);
                     }
@@ -174,30 +185,60 @@ public class Main {
         // If it is DFS, then method is 0 and does the following
         // Explore all possible moves
         if (method == 0) {
-        while (!frontier.isEmpty()) {
-            // Chose a leaf node and remove it from the frontier
-            State currentState = frontier.pop(); 
 
-            // Goal state check
-            if (currentState.moveCount == totalMoves) {
-                return currentState; // Solution found
-            }
+            if(isSolutionWithBitSet){
 
-            // Expand current node and add resulting nodes to the frontier
-            for (int[] move : MOVES) {
-                int nextRow = currentState.row + move[0];
-                int nextCol = currentState.col + move[1];
+                BitSet board;
 
-               // Check validity of the move
-               if (isAvailable(nextRow, nextCol, boardSize)) {
-                State child = new State(nextRow, nextCol, currentState);
-                if (!isInThePath(child)) { // Avoid revisiting
-                    frontier.push(child);
+                while (!frontier.isEmpty()) {
+                    State currentState = frontier.pop();
+        
+                    // Goal check 
+                    if (currentState.moveCount == totalMoves) {
+                        return currentState; // Solution found
+                    }
+        
+                    // Expand current node
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+        
+                        // Check validity of the move
+                        if (isSafeMove(nextRow, nextCol, currentState, boardSize)) {
+                            board = (BitSet) currentState.chessBoard.clone();
+                            board.set(nextRow * boardSize + nextCol);
+                            State child = new State(nextRow, nextCol, currentState, board);
+                            frontier.push(child);
+                        }
+                    }
+                }
+
+            } else {
+
+                while (!frontier.isEmpty()) {
+                    // Chose a leaf node and remove it from the frontier
+                    State currentState = frontier.pop(); 
+        
+                    // Goal state check
+                    if (currentState.moveCount == totalMoves) {
+                        return currentState; // Solution found
+                    }
+        
+                    // Expand current node and add resulting nodes to the frontier
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+        
+                       // Check validity of the move
+                       if (isAvailable(nextRow, nextCol, boardSize)) {
+                        State child = new State(nextRow, nextCol, currentState, new BitSet(0));
+                        if (!isInThePath(child)) { // Avoid revisiting
+                            frontier.push(child);
+                        }
+                    }
+                    }
                 }
             }
-            }
-        }
-
 
             // If it is DFS with Heuristic h1b, then method is 1 and does the following
         } else if (method == 1) {
@@ -226,7 +267,7 @@ public class Main {
 
                 // Make it visited
                 chessBoard[nextBestRow][nextBestCol] = moveCount + 1;
-                State child = new State(nextBestRow, nextBestCol, current); // Create new state with parent
+                State child = new State(nextBestRow, nextBestCol, current, new BitSet(0)); // Create new state with parent
                 State result = DFS(boardSize, startState); // Recursive call
                 if (result != null) {
                     return result; // Solution found
@@ -288,7 +329,7 @@ public class Main {
 
                 // Make it visited
                 chessBoard[nextBestRow][nextBestCol] = moveCount + 1;
-                State child = new State(nextBestRow, nextBestCol, current); // Create new state with parent
+                State child = new State(nextBestRow, nextBestCol, current, new BitSet(0)); // Create new state with parent
                 State result = DFS(boardSize, startState); // Recursive call
                 if (result != null) {
                     return result; // Solution found
@@ -336,6 +377,11 @@ public class Main {
         boolean notVisited = (chessBoard[row][col] == 0);
         return isPositionInBoard && notVisited;
     }
+
+    public static boolean isSafeMove(int row, int col, State current, int boardSize) {
+        return row >= 0 && col >= 0 && row < boardSize && col < boardSize && !current.chessBoard.get(row * boardSize + col);
+    }
+
 
     // Backtrack to find the path
     private static List<State> backtrace(State state) {
