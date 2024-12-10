@@ -242,115 +242,174 @@ public class Main {
 
             // If it is DFS with Heuristic h1b, then method is 1 and does the following
         } else if (method == 1) {
-            // Created a priority queue that has row, col, priority as a structure
-            PriorityQueue<int[]> priorityQueue = new PriorityQueue<>((a, b) -> Integer.compare(a[2], b[2]));
-            // In every moves
-            for (int i = 0; i < MOVES.length; i++) {
-                // Calculate next state
-                int nextRow = current.row + MOVES[i][0];
-                int nextCol = current.col + MOVES[i][1];
 
-                // If safe
-                if (isSafe(nextRow, nextCol, chessBoard, boardSize)) {
-                    // Calculate h1b and put it to priority queue
-                    int h1b = calculateH1b(chessBoard, nextRow, nextCol, boardSize);
-                    priorityQueue.add(new int[]{nextRow, nextCol, h1b});
-                }
+            if(isSolutionWithBitSet){
 
-            }
-            // Loop in the queue till it is empty
-            while (!priorityQueue.isEmpty()) {
-                // Get the move
-                int[] nextBestMove = priorityQueue.poll();
-                int nextBestRow = nextBestMove[0];
-                int nextBestCol = nextBestMove[1];
+                BitSet board;
 
-                // Make it visited
-                chessBoard[nextBestRow][nextBestCol] = moveCount + 1;
-                State child = new State(nextBestRow, nextBestCol, current, new BitSet(0)); // Create new state with parent
-                State result = DFS(boardSize, startState); // Recursive call
-                if (result != null) {
-                    return result; // Solution found
-                }
-                chessBoard[nextBestRow][nextBestCol] = 0; // Backtrack
-            }
-            // If it is DFS with Heuristic h2, then method is 2 and does the following
-        } else if (method == 2) {
-            // Created a priority queue that has row, col, priority, distance to corners as a structure
-            PriorityQueue<int[]> priorityQueue = new PriorityQueue<>(new Comparator<int[]>() {
-                public int compare(int[] a, int[] b) {
-                    // compare h1b value first
-                    int optionCompare = Integer.compare(a[2], b[2]);
-                    // if not tie
-                    if (optionCompare != 0) {
-                        return optionCompare;
+                while (!frontier.isEmpty()) {
+                    State currentState = frontier.pop();
+
+                    // Goal check
+                    if (currentState.moveCount == totalMoves) {
+                        return currentState; // Solution found
                     }
-                    // If tie, choose the one closes to corner
-                    return Integer.compare(a[3], b[3]);
-                }
-            });
-            // In every moves
-            for (int i = 0; i < MOVES.length; i++) {
-                // Calculate next state
-                int nextRow = current.row + MOVES[i][0];
-                int nextCol = current.col + MOVES[i][1];
 
-                // If safe
-                if (isSafe(nextRow, nextCol, chessBoard, boardSize)) {
-                    // Calculate h1b and add the distance to the corners; add it to priority queue
-                    int h1b = calculateH1b(chessBoard, nextRow, nextCol, boardSize);
+                    // Expand current node
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
 
-                    // Calculate distances to corners 0,0 ; 0,N-1 ; N-1,0; N-1;N-1
-                    int[] cornerDistances = {
-                            Math.abs(nextRow) + Math.abs(nextCol),              // Top-left corner
-                            Math.abs(nextRow) + Math.abs(nextCol - (boardSize - 1)),        // Top-right corner
-                            Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol),        // Bottom-left corner
-                            Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol - (boardSize - 1))   // Bottom-right corner
-                    };
-
-                    // Find the minimum distance to the corners
-                    int distanceToCorners = cornerDistances[0];
-                    for (int k = 1; k < cornerDistances.length; k++) {
-                        if (cornerDistances[k] < distanceToCorners) {
-                            distanceToCorners = cornerDistances[k];
+                        // Check validity of the move
+                        if (isSafeMove(nextRow, nextCol, currentState, boardSize)) {
+                            board = (BitSet) currentState.chessBoard.clone();
+                            board.set(nextRow * boardSize + nextCol);
+                            State child = new State(nextRow, nextCol, currentState, board);
+                            frontier.push(child);
                         }
                     }
-
-                    priorityQueue.add(new int[]{nextRow, nextCol, h1b, distanceToCorners});
                 }
 
+            } else {
+
+                while (!frontier.isEmpty()) {
+                    // Chose a leaf node and remove it from the frontier
+                    State currentState = frontier.pop();
+
+                    // Goal state check
+                    if (currentState.moveCount == totalMoves) {
+                        return currentState; // Solution found
+                    }
+
+                    // Expand current node and add resulting nodes to the frontier
+                    List<Object[]> h1bValues = new ArrayList<>();
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+                        // Check validity of the move
+                        if (isAvailable(nextRow, nextCol, boardSize)) {
+                            State child = new State(nextRow, nextCol, currentState, new BitSet(0));
+                            if (!isInThePath(child)) { // Avoid revisiting
+                                h1bValues.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), child});
+                            }
+                        }
+                    }
+                    h1bValues.sort((a, b) -> (Integer) b[0] - (Integer) a[0]);
+                    for(int i = 0; i < h1bValues.size(); i++){
+                        frontier.push((State) h1bValues.get(i)[1]);
+                    }
+                }
             }
-            // Loop in the queue till it is empty
-            while (!priorityQueue.isEmpty()) {
-                // Get the move
-                int[] nextBestMove = priorityQueue.poll();
-                int nextBestRow = nextBestMove[0];
-                int nextBestCol = nextBestMove[1];
 
-                // Make it visited
-                chessBoard[nextBestRow][nextBestCol] = moveCount + 1;
-                State child = new State(nextBestRow, nextBestCol, current, new BitSet(0)); // Create new state with parent
-                State result = DFS(boardSize, startState); // Recursive call
-                if (result != null) {
-                    return result; // Solution found
+            // If it is DFS with Heuristic h1b, then method is 1 and does the following
+
+            // If it is DFS with Heuristic h2, then method is 2 and does the following
+        } else if (method == 2) {
+
+            if(isSolutionWithBitSet){
+
+                BitSet board;
+
+                while (!frontier.isEmpty()) {
+                    State currentState = frontier.pop();
+
+                    // Goal check
+                    if (currentState.moveCount == totalMoves) {
+                        return currentState; // Solution found
+                    }
+
+                    // Expand current node
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+
+                        // Check validity of the move
+                        if (isSafeMove(nextRow, nextCol, currentState, boardSize)) {
+                            board = (BitSet) currentState.chessBoard.clone();
+                            board.set(nextRow * boardSize + nextCol);
+                            State child = new State(nextRow, nextCol, currentState, board);
+                            frontier.push(child);
+                        }
+                    }
                 }
-                chessBoard[nextBestRow][nextBestCol] = 0; // Backtrack
+
+            } else {
+
+                while (!frontier.isEmpty()) {
+                    // Chose a leaf node and remove it from the frontier
+                    State currentState = frontier.pop();
+
+                    // Goal state check
+                    if (currentState.moveCount == totalMoves) {
+                        return currentState; // Solution found
+                    }
+
+                    // Expand current node and add resulting nodes to the frontier
+                    List<Object[]> h2Values = new ArrayList<>();
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+                        // Check validity of the move
+                        if (isAvailable(nextRow, nextCol, boardSize)) {
+                            State child = new State(nextRow, nextCol, currentState, new BitSet(0));
+                            if (!isInThePath(child)) { // Avoid revisiting
+                                h2Values.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), calculateMinDistanceCorners(nextRow, nextCol, boardSize), child});
+                            }
+                        }
+                    }
+                    h2Values.sort((a, b) -> {
+                        // First compare by the first integer value (descending order -> max first)
+                        int firstComparison = (Integer) b[0] - (Integer) a[0]; // max first
+
+                        // If first integers are equal, compare by the second integer value (descending order -> max first)
+                        if (firstComparison == 0) {
+                            return (Integer) b[1] - (Integer) a[1]; // max first
+                        }
+                        return firstComparison; // If first integers are not equal, return the result of first comparison
+                    });
+
+                    for(int i = 0; i < h2Values.size(); i++){
+                        frontier.push((State) h2Values.get(i)[2]);
+                    }
+                }
             }
         }
         return null; // No solution found
     }
 
     // Method that calculates the options
-    private static int calculateH1b(int[][] chessBoard, int x, int y, int N) {
+    private static int calculateH1b(State currentState, int boardSize, int row, int col) {
         int options = 0;
         for (int i = 0; i < MOVES.length; i++) {
-            int nextX = x + MOVES[i][0];
-            int nextY = y + MOVES[i][1];
-            if (isSafe(nextX, nextY, chessBoard, N)) {
-                options++;
+            int nextRow = row + MOVES[i][0];
+            int nextCol = col + MOVES[i][1];
+            if (isAvailable(nextRow, nextCol, boardSize)) {
+                State child = new State(nextRow, nextCol, currentState, new BitSet(0));
+                if (!isInThePath(child)) { // Avoid revisiting
+                    options++;
+                }
             }
         }
         return options;
+    }
+
+    private static  int calculateMinDistanceCorners(int nextRow, int nextCol, int boardSize){
+        // Calculate distances to corners 0,0 ; 0,N-1 ; N-1,0; N-1;N-1
+        int[] cornerDistances = {
+                Math.abs(nextRow) + Math.abs(nextCol),              // Top-left corner
+                Math.abs(nextRow) + Math.abs(nextCol - (boardSize - 1)),        // Top-right corner
+                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol),        // Bottom-left corner
+                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol - (boardSize - 1))   // Bottom-right corner
+        };
+
+        // Find the minimum distance to the corners
+        int distanceToCorners = cornerDistances[0];
+        for (int k = 1; k < cornerDistances.length; k++) {
+            if (cornerDistances[k] < distanceToCorners) {
+                distanceToCorners = cornerDistances[k];
+            }
+        }
+        return distanceToCorners;
     }
 
     // Method that calculates the options and if there is a tie prefer the closer to the corners
