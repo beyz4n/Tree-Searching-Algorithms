@@ -3,15 +3,16 @@ import java.util.*;
 public class Main {
     // Possible moves for the knight
     private static final int[][] MOVES = {
-            {-2, 1}, {-1, 2}, {1, 2}, {2, 1},
-            {2, -1}, {1, -2}, {-1, -2}, {-2, -1}
+            { -2, 1 }, { -1, 2 }, { 1, 2 }, { 2, 1 },
+            { 2, -1 }, { 1, -2 }, { -1, -2 }, { -2, -1 }
     };
     static int totalMoves;
     private static boolean isSolutionWithBitSet = false;
+
     public static void main(String[] args) {
-        
+
         boolean solutionFound = false;
-        
+
         // Take the board size and search method from the user
         Scanner input = new Scanner(System.in);
         System.out.println("Enter a board size:");
@@ -35,18 +36,17 @@ public class Main {
         // Start position
         int startRow = 0;
         int startCol = 0;
-        BitSet  initialBoard = new BitSet(totalMoves);
+        BitSet initialBoard = new BitSet(totalMoves);
         initialBoard.set(0);
         State startState = new State(startRow, startCol, null, initialBoard); // Create start state
-       
-
 
         // Start the timer
         long startTime = System.nanoTime();
 
         try {
-            if (searchMethod.equals("a")||searchMethod.equals("b")||searchMethod.equals("c")||searchMethod.equals("d") ) {
-                solutionFound = treeSearch(searchMethod,startState,boardSize);
+            if (searchMethod.equals("a") || searchMethod.equals("b") || searchMethod.equals("c")
+                    || searchMethod.equals("d")) {
+                solutionFound = treeSearch(searchMethod, startState, boardSize);
                 System.out.println(solutionFound);
             } else {
                 System.out.println("Give the search method as a,b,c,d.");
@@ -69,177 +69,166 @@ public class Main {
         }
     }
 
-  
+    public static boolean treeSearch(String strategy, State startState, int boardSize) {
 
-    public static boolean treeSearch(String strategy, State startState, int boardSize){
-
-        //initializing frontier
-        Queue<State> queueFrontier = null; 
+        // initializing frontier
+        Queue<State> queueFrontier = null;
         Stack<State> stackFrontier = null;
-            
 
-        if(strategy.equals("a")){
-           
+        if (strategy.equals("a")) {
 
             queueFrontier = new LinkedList<>();
             queueFrontier.add(startState);
 
-            if(isSolutionWithBitSet){
+            if (isSolutionWithBitSet) {
 
                 BitSet board;
 
-                while (!queueFrontier.isEmpty()){
+                while (!queueFrontier.isEmpty()) {
 
                     State current = queueFrontier.poll();
-    
+
                     for (int[] move : MOVES) {
                         int newX = current.row + move[0];
                         int newY = current.col + move[1];
-    
-                        if (isSafeMove(newX, newY, current, boardSize)) {
+
+                        if (isSafeMoveForBitSet(newX, newY, current, boardSize)) {
                             board = (BitSet) current.chessBoard.clone();
                             board.set(newX * boardSize + newY);
                             State child = new State(newX, newY, current, board);
                             queueFrontier.add(child);
                         }
-                        }
-                        if (goalTest(current,strategy)) {
-                            return true;
-                        }
                     }
-                }
-
-            
-            else{
-
-            while (!queueFrontier.isEmpty()){
-
-                State current = queueFrontier.poll();
-
-                for (int[] move : MOVES) {
-                    int newX = current.row + move[0];
-                    int newY = current.col + move[1];
-
-                    if (isAvailable(newX, newY, boardSize)) {
-                        State newState = new State(newX, newY, current, new BitSet(0));
-                        if (!isInThePath(newState)) {
-                            queueFrontier.add(newState);
-                        }
-                    }
-                    if (goalTest(current,strategy)) {
+                    if (goalTest(current, strategy)) {
                         return true;
                     }
                 }
             }
+
+            else {
+
+                while (!queueFrontier.isEmpty()) {
+
+                    State current = queueFrontier.poll();
+
+                    for (int[] move : MOVES) {
+                        int newX = current.row + move[0];
+                        int newY = current.col + move[1];
+
+                        if (isAvailable(newX, newY, boardSize)) {
+                            State newState = new State(newX, newY, current, new BitSet(0));
+                            if (!isInThePath(newState)) {
+                                queueFrontier.add(newState);
+                            }
+                        }
+                        if (goalTest(current, strategy)) {
+                            return true;
+                        }
+                    }
+                }
             }
-    
-    }
 
+        }
 
-
-           else if (strategy.equals("b")) {
+        else if (strategy.equals("b")) {
 
             stackFrontier = new Stack<>();
             stackFrontier.push(startState);
 
-            if(isSolutionWithBitSet){
-    
-                    BitSet board;
-    
-                    while (!stackFrontier.isEmpty()) {
-                        State currentState = stackFrontier.pop();
-            
-                        // Goal check 
-                        if (goalTest(currentState, strategy)) {
-                            return true; // Solution found
+            if (isSolutionWithBitSet) {
+
+                BitSet board;
+
+                while (!stackFrontier.isEmpty()) {
+                    State currentState = stackFrontier.pop();
+
+                    // Goal check
+                    if (goalTest(currentState, strategy)) {
+                        return true; // Solution found
+                    }
+
+                    // Expand current node
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+
+                        // Check validity of the move
+                        if (isSafeMoveForBitSet(nextRow, nextCol, currentState, boardSize)) {
+                            board = (BitSet) currentState.chessBoard.clone();
+                            board.set(nextRow * boardSize + nextCol);
+                            State child = new State(nextRow, nextCol, currentState, board);
+                            stackFrontier.push(child);
                         }
-            
-                        // Expand current node
-                        for (int[] move : MOVES) {
-                            int nextRow = currentState.row + move[0];
-                            int nextCol = currentState.col + move[1];
-            
-                            // Check validity of the move
-                            if (isSafeMove(nextRow, nextCol, currentState, boardSize)) {
-                                board = (BitSet) currentState.chessBoard.clone();
-                                board.set(nextRow * boardSize + nextCol);
-                                State child = new State(nextRow, nextCol, currentState, board);
+                    }
+                }
+            } else {
+
+                while (!stackFrontier.isEmpty()) {
+                    // Chose a leaf node and remove it from the frontier
+                    State currentState = stackFrontier.pop();
+
+                    // Goal state check
+                    if (goalTest(currentState, strategy)) {
+                        return true; // Solution found
+                    }
+
+                    // Expand current node and add resulting nodes to the frontier
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+
+                        // Check validity of the move
+                        if (isAvailable(nextRow, nextCol, boardSize)) {
+                            State child = new State(nextRow, nextCol, currentState, new BitSet(0));
+                            if (!isInThePath(child)) { // Avoid revisiting
                                 stackFrontier.push(child);
                             }
                         }
                     }
-                } 
-             else {
-
-            while (!stackFrontier.isEmpty()) {
-                // Chose a leaf node and remove it from the frontier
-                State currentState = stackFrontier.pop(); 
-    
-                // Goal state check
-                if (goalTest(currentState, strategy)) {
-                    return true; // Solution found
-                }
-    
-                // Expand current node and add resulting nodes to the frontier
-                for (int[] move : MOVES) {
-                    int nextRow = currentState.row + move[0];
-                    int nextCol = currentState.col + move[1];
-    
-                   // Check validity of the move
-                   if (isAvailable(nextRow, nextCol, boardSize)) {
-                    State child = new State(nextRow, nextCol, currentState, new BitSet(0));
-                    if (!isInThePath(child)) { // Avoid revisiting
-                        stackFrontier.push(child);
-                    }
-                }
                 }
             }
         }
-    }
-    
-                // If it is DFS with Heuristic h1b, then method is 1 and does the following
-             else if (strategy.equals("c")) {
-                stackFrontier = new Stack<>();
-                stackFrontier.push(startState);
 
-                if(isSolutionWithBitSet){
+        // If it is DFS with Heuristic h1b, then method is 1 and does the following
+        else if (strategy.equals("c")) {
+            stackFrontier = new Stack<>();
+            stackFrontier.push(startState);
 
-            
-    
-                    BitSet board;
-    
-                    while (!stackFrontier.isEmpty()) {
-                        State currentState = stackFrontier.pop();
-    
-                        // Goal check
-                        if (goalTest(currentState, strategy)) {
-                            return true; // Solution found
-                        }
-                         
-                        List<Object[]> h1bValues = new ArrayList<>();
-                        // Expand current node
-                        for (int[] move : MOVES) {
-                            int nextRow = currentState.row + move[0];
-                            int nextCol = currentState.col + move[1];
-    
-                            // Check validity of the move
-                            if (isSafeMove(nextRow, nextCol, currentState, boardSize)) {
-                                board = (BitSet) currentState.chessBoard.clone();
-                                board.set(nextRow * boardSize + nextCol);
-                                State child = new State(nextRow, nextCol, currentState, board);
-                                if (!isInThePath(child)) { // Avoid revisiting
-                                    h1bValues.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), child});
-                                }
+            if (isSolutionWithBitSet) {
+
+                BitSet board;
+
+                while (!stackFrontier.isEmpty()) {
+                    State currentState = stackFrontier.pop();
+
+                    // Goal check
+                    if (goalTest(currentState, strategy)) {
+                        return true; // Solution found
+                    }
+
+                    List<Object[]> h1bValues = new ArrayList<>();
+                    // Expand current node
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+
+                        // Check validity of the move
+                        if (isSafeMoveForBitSet(nextRow, nextCol, currentState, boardSize)) {
+                            board = (BitSet) currentState.chessBoard.clone();
+                            board.set(nextRow * boardSize + nextCol);
+                            State child = new State(nextRow, nextCol, currentState, board);
+                            if (!isInThePath(child)) { // Avoid revisiting
+                                h1bValues.add(new Object[] { calculateH1b(child, boardSize, nextRow, nextCol), child });
                             }
                         }
-                        h1bValues.sort((a, b) -> (Integer) b[0] - (Integer) a[0]);
-                        for(int i = 0; i < h1bValues.size(); i++){
-                            stackFrontier.push((State) h1bValues.get(i)[1]);
                     }
-    
+                    h1bValues.sort((a, b) -> (Integer) b[0] - (Integer) a[0]);
+                    for (int i = 0; i < h1bValues.size(); i++) {
+                        stackFrontier.push((State) h1bValues.get(i)[1]);
+                    }
+
                 }
-            }
-            else {
+            } else {
 
                 while (!stackFrontier.isEmpty()) {
                     // Chose a leaf node and remove it from the frontier
@@ -259,73 +248,71 @@ public class Main {
                         if (isAvailable(nextRow, nextCol, boardSize)) {
                             State child = new State(nextRow, nextCol, currentState, new BitSet(0));
                             if (!isInThePath(child)) { // Avoid revisiting
-                                h1bValues.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), child});
+                                h1bValues.add(new Object[] { calculateH1b(child, boardSize, nextRow, nextCol), child });
                             }
                         }
                     }
                     h1bValues.sort((a, b) -> (Integer) b[0] - (Integer) a[0]);
-                    for(int i = 0; i < h1bValues.size(); i++){
+                    for (int i = 0; i < h1bValues.size(); i++) {
                         stackFrontier.push((State) h1bValues.get(i)[1]);
                     }
                 }
             }
 
-
-
         }
 
+        // If it is DFS with Heuristic h2, then method is 2 and does the following
+        else if (strategy.equals("d")) {
 
+            stackFrontier = new Stack<>();
+            stackFrontier.push(startState);
 
-                // If it is DFS with Heuristic h2, then method is 2 and does the following
-            else if (strategy.equals("d")) {
+            if (isSolutionWithBitSet) {
+                BitSet board;
 
-                stackFrontier = new Stack<>();
-                stackFrontier.push(startState);
-    
-                if(isSolutionWithBitSet){
-                    BitSet board;
-    
-                    while (!stackFrontier.isEmpty()) {
-                        State currentState = stackFrontier.pop();
-    
-                        // Goal check
-                        if (goalTest(currentState, strategy)) {
-                            return true; // Solution found
-                        }
-                        List<Object[]> h2Values = new ArrayList<>();
-                        // Expand current node
-                        for (int[] move : MOVES) {
-                            int nextRow = currentState.row + move[0];
-                            int nextCol = currentState.col + move[1];
-    
-                            // Check validity of the move
-                            if (isSafeMove(nextRow, nextCol, currentState, boardSize)) {
-                                board = (BitSet) currentState.chessBoard.clone();
-                                board.set(nextRow * boardSize + nextCol);
-                                State child = new State(nextRow, nextCol, currentState, board);
-                                if (!isInThePath(child)) { // Avoid revisiting
-                                    h2Values.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), calculateMinDistanceCorners(nextRow, nextCol, boardSize), child});
-                                }
+                while (!stackFrontier.isEmpty()) {
+                    State currentState = stackFrontier.pop();
+
+                    // Goal check
+                    if (goalTest(currentState, strategy)) {
+                        return true; // Solution found
+                    }
+                    List<Object[]> h2Values = new ArrayList<>();
+                    // Expand current node
+                    for (int[] move : MOVES) {
+                        int nextRow = currentState.row + move[0];
+                        int nextCol = currentState.col + move[1];
+
+                        // Check validity of the move
+                        if (isSafeMoveForBitSet(nextRow, nextCol, currentState, boardSize)) {
+                            board = (BitSet) currentState.chessBoard.clone();
+                            board.set(nextRow * boardSize + nextCol);
+                            State child = new State(nextRow, nextCol, currentState, board);
+                            if (!isInThePath(child)) { // Avoid revisiting
+                                h2Values.add(new Object[] { calculateH1b(child, boardSize, nextRow, nextCol),
+                                        calculateMinDistanceCorners(nextRow, nextCol, boardSize), child });
                             }
-                        }
-                        h2Values.sort((a, b) -> {
-                            // First compare by the first integer value (descending order -> max first)
-                            int firstComparison = (Integer) b[0] - (Integer) a[0]; // max first
-    
-                            // If first integers are equal, compare by the second integer value (descending order -> max first)
-                            if (firstComparison == 0) {
-                                return (Integer) b[1] - (Integer) a[1]; // max first
-                            }
-                            return firstComparison; // If first integers are not equal, return the result of first comparison
-                        });
-    
-                        for(int i = 0; i < h2Values.size(); i++){
-                            stackFrontier.push((State) h2Values.get(i)[2]);
                         }
                     }
-    
+                    h2Values.sort((a, b) -> {
+                        // First compare by the first integer value (descending order -> max first)
+                        int firstComparison = (Integer) b[0] - (Integer) a[0]; // max first
 
-            } 
+                        // If first integers are equal, compare by the second integer value (descending
+                        // order -> max first)
+                        if (firstComparison == 0) {
+                            return (Integer) b[1] - (Integer) a[1]; // max first
+                        }
+                        return firstComparison; // If first integers are not equal, return the result of first
+                                                // comparison
+                    });
+
+                    for (int i = 0; i < h2Values.size(); i++) {
+                        stackFrontier.push((State) h2Values.get(i)[2]);
+                    }
+                }
+
+            }
 
             else {
 
@@ -347,7 +334,8 @@ public class Main {
                         if (isAvailable(nextRow, nextCol, boardSize)) {
                             State child = new State(nextRow, nextCol, currentState, new BitSet(0));
                             if (!isInThePath(child)) { // Avoid revisiting
-                                h2Values.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), calculateMinDistanceCorners(nextRow, nextCol, boardSize), child});
+                                h2Values.add(new Object[] { calculateH1b(child, boardSize, nextRow, nextCol),
+                                        calculateMinDistanceCorners(nextRow, nextCol, boardSize), child });
                             }
                         }
                     }
@@ -355,48 +343,44 @@ public class Main {
                         // First compare by the first integer value (descending order -> max first)
                         int firstComparison = (Integer) b[0] - (Integer) a[0]; // max first
 
-                        // If first integers are equal, compare by the second integer value (descending order -> max first)
+                        // If first integers are equal, compare by the second integer value (descending
+                        // order -> max first)
                         if (firstComparison == 0) {
                             return (Integer) b[1] - (Integer) a[1]; // max first
                         }
-                        return firstComparison; // If first integers are not equal, return the result of first comparison
+                        return firstComparison; // If first integers are not equal, return the result of first
+                                                // comparison
                     });
 
-                    for(int i = 0; i < h2Values.size(); i++){
+                    for (int i = 0; i < h2Values.size(); i++) {
                         stackFrontier.push((State) h2Values.get(i)[2]);
                     }
                 }
             }
         }
 
-            return false; // No solution found
-        }
-    
+        return false; // No solution found
+    }
 
+    public static boolean goalTest(State currentState, String strategy) {
 
-        public static boolean goalTest(State currentState, String strategy){
-
-           if(strategy.equals("a")){
-               if(testPath(currentState)){
-               ArrayList<State> path = constructPath(currentState);
-               printPath(path);
-               return true;
-           }
-        }
-           else{
-            if (currentState.moveCount == totalMoves) {
-                ArrayList<State> path = constructPath(currentState);  
+        if (strategy.equals("a")) {
+            if (testPath(currentState)) {
+                ArrayList<State> path = constructPath(currentState);
                 printPath(path);
                 return true;
-           }
+            }
+        } else {
+            if (currentState.moveCount == totalMoves) {
+                ArrayList<State> path = constructPath(currentState);
+                printPath(path);
+                return true;
+            }
         }
 
         return false;
 
-        }
-
-
-
+    }
 
     public static boolean isAvailable(int nextX, int nextY, int boardSize) {
         if (nextX >= 0 && nextY >= 0 && nextX < boardSize && nextY < boardSize) {
@@ -421,10 +405,10 @@ public class Main {
     public static ArrayList<State> constructPath(State state) {
         ArrayList<State> path = new ArrayList<>();
         while (state.parent != null) {
-            path.add(0,state);
+            path.add(0, state);
             state = state.parent;
         }
-        path.add(0,state);
+        path.add(0, state);
         return path;
     }
 
@@ -436,8 +420,6 @@ public class Main {
         }
         return i == 1;
     }
-
-
 
     // Method that calculates the options
     private static int calculateH1b(State currentState, int boardSize, int row, int col) {
@@ -455,13 +437,13 @@ public class Main {
         return options;
     }
 
-    private static  int calculateMinDistanceCorners(int nextRow, int nextCol, int boardSize){
+    private static int calculateMinDistanceCorners(int nextRow, int nextCol, int boardSize) {
         // Calculate distances to corners 0,0 ; 0,N-1 ; N-1,0; N-1;N-1
         int[] cornerDistances = {
-                Math.abs(nextRow) + Math.abs(nextCol),              // Top-left corner
-                Math.abs(nextRow) + Math.abs(nextCol - (boardSize - 1)),        // Top-right corner
-                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol),        // Bottom-left corner
-                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol - (boardSize - 1))   // Bottom-right corner
+                Math.abs(nextRow) + Math.abs(nextCol), // Top-left corner
+                Math.abs(nextRow) + Math.abs(nextCol - (boardSize - 1)), // Top-right corner
+                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol), // Bottom-left corner
+                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol - (boardSize - 1)) // Bottom-right corner
         };
 
         // Find the minimum distance to the corners
@@ -474,45 +456,17 @@ public class Main {
         return distanceToCorners;
     }
 
-    // Method that calculates the options and if there is a tie prefer the closer to the corners
-    private static int calculateH2(int[][] chessBoard, int x, int y, int N) {
-        int options = 0;
-        for (int i = 0; i < MOVES.length; i++) {
-            int nextX = x + MOVES[i][0];
-            int nextY = y + MOVES[i][1];
-            if (isSafe(nextX, nextY, chessBoard, N)) {
-                options++;
-            }
+    public static boolean isSafeMoveForBitSet(int row, int col, State current, int boardSize) {
+        return row >= 0 && col >= 0 && row < boardSize && col < boardSize
+                && !current.chessBoard.get(row * boardSize + col);
+    }
+
+    // Print the path
+    private static void printPath(List<State> path) {
+        System.out.println("Knight's Tour Path:");
+        for (State state : path) {
+            System.out.printf("(%d, %d) -> ", state.row, state.col);
         }
-        return options;
+        System.out.println("END");
     }
-
-    // TODO: isSafe method will be deleted
-    // Check if a cell is within bounds and unvisited
-    private static boolean isSafe(int row, int col, int[][] chessBoard, int N) {
-
-        boolean isPositionInBoard = (row >= 0 && row < N && col >= 0 && col < N);
-        if (isPositionInBoard == false) {
-            return false;
-        }
-        boolean notVisited = (chessBoard[row][col] == 0);
-        return isPositionInBoard && notVisited;
-    }
-
-    public static boolean isSafeMove(int row, int col, State current, int boardSize) {
-        return row >= 0 && col >= 0 && row < boardSize && col < boardSize && !current.chessBoard.get(row * boardSize + col);
-    }
-
-
-
-   // Print the path 
-   private static void printPath(List<State> path) {
-    System.out.println("Knight's Tour Path:");
-    for (State state : path) {
-        System.out.printf("(%d, %d) -> ", state.row, state.col);
-    }
-    System.out.println("END");
 }
-}
-    
-
