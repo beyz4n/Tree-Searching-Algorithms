@@ -1,3 +1,5 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class Main {
@@ -6,17 +8,28 @@ public class Main {
             { -2, 1 }, { -1, 2 }, { 1, 2 }, { 2, 1 },
             { 2, -1 }, { 1, -2 }, { -1, -2 }, { -2, -1 }
     };
-    static int totalMoves;
+    private static int totalMoves;
     private static boolean isSolutionWithBitSet = false;
+    private static FileWriter writer = null;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         boolean solutionFound = false;
+
+        try {
+            writer = new FileWriter("moves.txt");
+        }
+        catch (Exception e) {
+            System.out.println("Cannot open a file!");
+            System.exit(0);
+        }
+
 
         // Take the board size and search method from the user
         Scanner input = new Scanner(System.in);
         System.out.println("Enter a board size:");
         int boardSize = input.nextInt();
+        writer.write("N = " + boardSize + "\n");
 
         Scanner input2 = new Scanner(System.in);
         System.out.println("Enter a search method:(a-d)");
@@ -67,6 +80,7 @@ public class Main {
         } else {
             System.out.println("No solution exists.");
         }
+        writer.close();
     }
 
     public static boolean treeSearch(String strategy, State startState, int boardSize) {
@@ -464,9 +478,15 @@ public class Main {
     // Print the path
     private static void printPath(List<State> path) {
         System.out.println("Knight's Tour Path:");
-        for (State state : path) {
-            System.out.printf("(%d, %d) -> ", state.row, state.col);
+        try {
+            for (State state : path) {
+                writer.write(state.row + ", " + state.col + "\n");
+                System.out.printf("(%d, %d) -> ", state.row, state.col);
+            }
         }
-        System.out.println("END");
+        catch (Exception e) {
+            System.exit(0);
+        }
+
     }
 }
