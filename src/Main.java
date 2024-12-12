@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class Main {
@@ -99,7 +102,7 @@ public class Main {
                             queueFrontier.add(child);
                         }
                     }
-                    if (goalTest(current, strategy)) {
+                    if (goalTest(current, strategy, boardSize)) {
                         return true;
                     }
                 }
@@ -121,7 +124,7 @@ public class Main {
                                 queueFrontier.add(newState);
                             }
                         }
-                        if (goalTest(current, strategy)) {
+                        if (goalTest(current, strategy, boardSize)) {
                             return true;
                         }
                     }
@@ -143,7 +146,7 @@ public class Main {
                     State currentState = stackFrontier.pop();
 
                     // Goal check
-                    if (goalTest(currentState, strategy)) {
+                    if (goalTest(currentState, strategy, boardSize)) {
                         return true; // Solution found
                     }
 
@@ -168,7 +171,7 @@ public class Main {
                     State currentState = stackFrontier.pop();
 
                     // Goal state check
-                    if (goalTest(currentState, strategy)) {
+                    if (goalTest(currentState, strategy, boardSize)) {
                         return true; // Solution found
                     }
 
@@ -202,7 +205,7 @@ public class Main {
                     State currentState = stackFrontier.pop();
 
                     // Goal check
-                    if (goalTest(currentState, strategy)) {
+                    if (goalTest(currentState, strategy, boardSize)) {
                         return true; // Solution found
                     }
 
@@ -235,7 +238,7 @@ public class Main {
                     State currentState = stackFrontier.pop();
 
                     // Goal state check
-                    if (goalTest(currentState, strategy)) {
+                    if (goalTest(currentState, strategy, boardSize)) {
                         return true; // Solution found
                     }
 
@@ -274,7 +277,7 @@ public class Main {
                     State currentState = stackFrontier.pop();
 
                     // Goal check
-                    if (goalTest(currentState, strategy)) {
+                    if (goalTest(currentState, strategy, boardSize)) {
                         return true; // Solution found
                     }
                     List<Object[]> h2Values = new ArrayList<>();
@@ -321,7 +324,7 @@ public class Main {
                     State currentState = stackFrontier.pop();
 
                     // Goal state check
-                    if (goalTest(currentState, strategy)) {
+                    if (goalTest(currentState, strategy, boardSize)) {
                         return true; // Solution found
                     }
 
@@ -362,18 +365,18 @@ public class Main {
         return false; // No solution found
     }
 
-    public static boolean goalTest(State currentState, String strategy) {
+    public static boolean goalTest(State currentState, String strategy, int boardSize) {
 
         if (strategy.equals("a")) {
             if (testPath(currentState)) {
                 ArrayList<State> path = constructPath(currentState);
-                printPath(path);
+                printPath(path, boardSize);
                 return true;
             }
         } else {
             if (currentState.moveCount == totalMoves) {
                 ArrayList<State> path = constructPath(currentState);
-                printPath(path);
+                printPath(path, boardSize);
                 return true;
             }
         }
@@ -461,12 +464,31 @@ public class Main {
                 && !current.chessBoard.get(row * boardSize + col);
     }
 
-    // Print the path
-    private static void printPath(List<State> path) {
-        System.out.println("Knight's Tour Path:");
-        for (State state : path) {
-            System.out.printf("(%d, %d) -> ", state.row, state.col);
-        }
-        System.out.println("END");
+    public static void printPath(List<State> path, int boardSize) {
+    // Print to console
+    System.out.println("Knight's Tour Path:");
+    for (State state : path) {
+        System.out.printf("(%d, %d) -> ", state.row, state.col);
     }
+    System.out.println("END");
+
+    // Write to a text file
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("moves.txt"))) {
+        writer.write("N = " + boardSize + "\n");
+        for (State state : path) {
+            writer.write(state.row + ", " + state.col + "\n");
+        }
+    } catch (IOException e) {
+        System.err.println("Error writing to file: " + e.getMessage());
+    }
+}
+
+    // // Print the path
+    // private static void printPath(List<State> path) {
+    //     System.out.println("Knight's Tour Path:");
+    //     for (State state : path) {
+    //         System.out.printf("(%d, %d) -> ", state.row, state.col);
+    //     }
+    //     System.out.println("END");
+    // }
 }
