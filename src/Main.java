@@ -26,7 +26,6 @@ public class Main {
             System.exit(0);
         }
 
-       
         // Take the board size and search method from the user
         Scanner input = new Scanner(System.in);
         System.out.println("Enter a board size:");
