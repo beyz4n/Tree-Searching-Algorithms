@@ -3,21 +3,24 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
+
     // Possible moves for the knight
     private static final int[][] MOVES = {
-            {-2, 1}, {-1, 2}, {1, 2}, {2, 1},
-            {2, -1}, {1, -2}, {-1, -2}, {-2, -1}
+            { -2, 1 }, { -1, 2 }, { 1, 2 }, { 2, 1 },
+            { 2, -1 }, { 1, -2 }, { -1, -2 }, { -2, -1 }
     };
+
     static int totalMoves;
-    static int numberOfNodesExpanded = 0;
-    private static boolean isSolutionWithBitSet = false;
+    static int numberOfNodesExpanded = 0; // Number of nodes expanded
+    private static boolean isSolutionWithBitSet = false; // If true, the solution is kept with chessBoard as BitSet
     private static boolean timeoutFlag = false;
     private static FileWriter writer = null;
 
     public static void main(String[] args) {
 
-        boolean solutionFound = false;
+        boolean solutionFound = false; // Solution found flag
 
+        // Open a file to write the moves of the knight in the solution
         try {
             writer = new FileWriter("moves.txt");
         } catch (Exception e) {
@@ -25,7 +28,7 @@ public class Main {
             System.exit(0);
         }
 
-        // Take the board size and search method from the user
+        // Take the board size from the user
         Scanner input = new Scanner(System.in);
         System.out.println("Enter a board size:");
         int boardSize = input.nextInt();
@@ -36,10 +39,12 @@ public class Main {
             System.exit(0);
         }
 
+        // Take the search method from the user
         Scanner input2 = new Scanner(System.in);
         System.out.println("Enter a search method:(a-d)");
         String searchMethod = input2.next();
 
+        // Take the user input to keep the chessboard in the state
         Scanner input3 = new Scanner(System.in);
         System.out.println("If you want to keep the chessboard in the state, enter '1' otherwise enter '0':");
         String bitSetInput = input3.next();
@@ -50,6 +55,24 @@ public class Main {
             isSolutionWithBitSet = false;
         }
 
+        // totalMoves is the number of moves in solution
+        totalMoves = boardSize * boardSize;
+
+        // Start position
+        int startRow = 0;
+        int startCol = 0;
+
+        // Create a BitSet to keep the chessboard
+        BitSet initialBoard = new BitSet(totalMoves);
+        initialBoard.set(0);
+
+        // Create the start state
+        State startState = new State(startRow, startCol, null, initialBoard);
+
+        // Time limit for the search: 15 minutes
+        long duration = 900000;
+
+        // Search method name
         String searchMethodName = switch (searchMethod) {
             case "a" -> "Breadth First Search";
             case "b" -> "Depth First Search";
@@ -58,21 +81,14 @@ public class Main {
             default -> "";
         };
 
-        totalMoves = boardSize * boardSize;
-        // Start position
-        int startRow = 0;
-        int startCol = 0;
-        BitSet initialBoard = new BitSet(totalMoves);
-        initialBoard.set(0);
-        State startState = new State(startRow, startCol, null, initialBoard); // Create start state
-
-        long duration = 900000;
-        System.out.println("You selected the search method as " + searchMethodName + " and the time limit is " + duration / 60000 + " minutes.") ;
+        System.out.println("You selected the search method as " + searchMethodName + " and the time limit is "
+                + duration / 60000 + " minutes.");
         long startTime = System.currentTimeMillis();
 
-
+        // Start the search
         try {
-            if (searchMethod.equals("a") || searchMethod.equals("b") || searchMethod.equals("c") || searchMethod.equals("d")) {
+            if (searchMethod.equals("a") || searchMethod.equals("b") || searchMethod.equals("c")
+                    || searchMethod.equals("d")) {
 
                 solutionFound = treeSearch(searchMethod, startState, boardSize, startTime, duration);
                 long endTime = System.currentTimeMillis();
@@ -91,7 +107,7 @@ public class Main {
             System.exit(0);
         }
 
-
+        // Print the result
         if (solutionFound) {
             System.out.println("A solution found.");
             System.out.println("Number of nodes expanded: " + numberOfNodesExpanded);
@@ -110,25 +126,26 @@ public class Main {
         }
     }
 
+    // Tree search method
     public static boolean treeSearch(String strategy, State startState, int boardSize, long startTime, long duration) {
 
-        //initializing frontier
+        // initializing frontier
         Queue<State> queueFrontier = null;
         Stack<State> stackFrontier = null;
 
-
         if (strategy.equals("a")) {
 
-
+            // Initialize the frontier (nodes to be visited) using the initial state of problem
             queueFrontier = new LinkedList<>();
             queueFrontier.add(startState);
 
             if (isSolutionWithBitSet) {
 
-                BitSet board;
+                BitSet board; // Bitset to keep the chessboard
 
                 while (!queueFrontier.isEmpty()) {
 
+                    // Check the time limit
                     long endTime = System.currentTimeMillis();
                     if (endTime - startTime >= duration) {
                         float timeSpent = endTime - startTime;
@@ -137,9 +154,16 @@ public class Main {
                         return false;
                     }
 
+                    // Choose a leaf node for expansion according to strategy and remove it from the frontier
                     State current = queueFrontier.poll();
                     numberOfNodesExpanded++;
 
+                    // If goal state then return the corresponding solution
+                    if (goalTest(current, strategy)) {
+                        return true;
+                    }
+
+                    // Expand the node and add the resulting nodes to the frontier
                     for (int[] move : MOVES) {
                         int newX = current.row + move[0];
                         int newY = current.col + move[1];
@@ -151,14 +175,13 @@ public class Main {
                             queueFrontier.add(child);
                         }
                     }
-                    if (goalTest(current, strategy)) {
-                        return true;
-                    }
+
                 }
             } else {
 
                 while (!queueFrontier.isEmpty()) {
 
+                    // Check the time limit
                     long endTime = System.currentTimeMillis();
                     if (endTime - startTime >= duration) {
 
@@ -166,9 +189,16 @@ public class Main {
                         return false;
                     }
 
+                    // Choose a leaf node for expansion according to strategy and remove it from the frontier
                     State current = queueFrontier.poll();
                     numberOfNodesExpanded++;
 
+                    // If goal state then return the corresponding solution
+                    if (goalTest(current, strategy)) {
+                        return true;
+                    }
+
+                    // Expand the node and add the resulting nodes to the frontier
                     for (int[] move : MOVES) {
                         int newX = current.row + move[0];
                         int newY = current.col + move[1];
@@ -179,39 +209,41 @@ public class Main {
                                 queueFrontier.add(newState);
                             }
                         }
-                        if (goalTest(current, strategy)) {
-                            return true;
-                        }
+
                     }
                 }
             }
 
         } else if (strategy.equals("b")) {
 
+            // Initialize the frontier (nodes to be visited) using the initial state of problem
             stackFrontier = new Stack<>();
             stackFrontier.push(startState);
 
             if (isSolutionWithBitSet) {
 
+                // Bitset to keep the chessboard
                 BitSet board;
 
                 while (!stackFrontier.isEmpty()) {
 
+                    // Check the time limit
                     long endTime = System.currentTimeMillis();
                     if (endTime - startTime >= duration) {
 
                         timeoutFlag = true;
                         return false;
                     }
+                    // Choose a leaf node for expansion according to strategy and remove it from the frontier
                     State currentState = stackFrontier.pop();
                     numberOfNodesExpanded++;
 
-                    // Goal check
+                    // If goal state then return the corresponding solution
                     if (goalTest(currentState, strategy)) {
                         return true; // Solution found
                     }
 
-                    // Expand current node
+                    // Expand the node and add the resulting nodes to the frontier
                     for (int[] move : MOVES) {
                         int nextRow = currentState.row + move[0];
                         int nextCol = currentState.col + move[1];
@@ -229,17 +261,18 @@ public class Main {
 
                 while (!stackFrontier.isEmpty()) {
 
+                    // Check the time limit
                     long endTime = System.currentTimeMillis();
                     if (endTime - startTime >= duration) {
 
                         timeoutFlag = true;
                         return false;
                     }
-                    // Chose a leaf node and remove it from the frontier
+                    // Choose a leaf node for expansion according to strategy and remove it from the frontier
                     State currentState = stackFrontier.pop();
                     numberOfNodesExpanded++;
 
-                    // Goal state check
+                    // If goal state then return the corresponding solution
                     if (goalTest(currentState, strategy)) {
                         return true; // Solution found
                     }
@@ -263,32 +296,37 @@ public class Main {
 
         // If it is DFS with Heuristic h1b, then method is 1 and does the following
         else if (strategy.equals("c")) {
+
+            // Initialize the frontier (nodes to be visited) using the initial state of problem
             stackFrontier = new Stack<>();
             stackFrontier.push(startState);
 
             if (isSolutionWithBitSet) {
 
-
+                // Bitset to keep the chessboard
                 BitSet board;
 
                 while (!stackFrontier.isEmpty()) {
 
+                    // Check the time limit
                     long endTime = System.currentTimeMillis();
                     if (endTime - startTime >= duration) {
 
                         timeoutFlag = true;
                         return false;
                     }
+                    // Choose a leaf node for expansion according to strategy and remove it from the frontier
                     State currentState = stackFrontier.pop();
                     numberOfNodesExpanded++;
 
-                    // Goal check
+                    // If goal state then return the corresponding solution
                     if (goalTest(currentState, strategy)) {
                         return true; // Solution found
                     }
 
                     List<Object[]> h1bValues = new ArrayList<>();
-                    // Expand current node
+
+                    // Expand the node and add the resulting nodes to the frontier
                     for (int[] move : MOVES) {
                         int nextRow = currentState.row + move[0];
                         int nextCol = currentState.col + move[1];
@@ -299,7 +337,7 @@ public class Main {
                             board.set(nextRow * boardSize + nextCol);
                             State child = new State(nextRow, nextCol, currentState, board);
                             if (!isInThePath(child)) { // Avoid revisiting
-                                h1bValues.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), child});
+                                h1bValues.add(new Object[] { calculateH1b(child, boardSize, nextRow, nextCol), child });
                             }
                         }
                     }
@@ -313,23 +351,26 @@ public class Main {
 
                 while (!stackFrontier.isEmpty()) {
 
+                    // Check the time limit
                     long endTime = System.currentTimeMillis();
                     if (endTime - startTime >= duration) {
 
                         timeoutFlag = true;
                         return false;
                     }
-                    // Chose a leaf node and remove it from the frontier
+
+                    // Choose a leaf node for expansion according to strategy and remove it from the frontier
                     State currentState = stackFrontier.pop();
                     numberOfNodesExpanded++;
 
-                    // Goal state check
+                    // If goal state then return the corresponding solution
                     if (goalTest(currentState, strategy)) {
                         return true; // Solution found
                     }
 
-                    // Expand current node and add resulting nodes to the frontier
                     List<Object[]> h1bValues = new ArrayList<>();
+
+                    // Expand current node and add resulting nodes to the frontier
                     for (int[] move : MOVES) {
                         int nextRow = currentState.row + move[0];
                         int nextCol = currentState.col + move[1];
@@ -337,7 +378,7 @@ public class Main {
                         if (isAvailable(nextRow, nextCol, boardSize)) {
                             State child = new State(nextRow, nextCol, currentState, new BitSet(0));
                             if (!isInThePath(child)) { // Avoid revisiting
-                                h1bValues.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), child});
+                                h1bValues.add(new Object[] { calculateH1b(child, boardSize, nextRow, nextCol), child });
                             }
                         }
                     }
@@ -348,36 +389,43 @@ public class Main {
                 }
             }
 
-
         }
-
 
         // If it is DFS with Heuristic h2, then method is 2 and does the following
         else if (strategy.equals("d")) {
 
+            // Initialize the frontier (nodes to be visited) using the initial state of
+            // problem
             stackFrontier = new Stack<>();
             stackFrontier.push(startState);
 
             if (isSolutionWithBitSet) {
+
+                // Bitset to keep the chessboard
                 BitSet board;
 
                 while (!stackFrontier.isEmpty()) {
 
+                    // Check the time limit
                     long endTime = System.currentTimeMillis();
                     if (endTime - startTime >= duration) {
 
                         timeoutFlag = true;
                         return false;
                     }
+
+                    // Choose a leaf node for expansion according to strategy and remove it from the
+                    // frontier
                     State currentState = stackFrontier.pop();
                     numberOfNodesExpanded++;
 
-                    // Goal check
+                    // If goal state then return the corresponding solution
                     if (goalTest(currentState, strategy)) {
                         return true; // Solution found
                     }
                     List<Object[]> h2Values = new ArrayList<>();
-                    // Expand current node
+
+                    // Expand current node and add resulting nodes to the frontier
                     for (int[] move : MOVES) {
                         int nextRow = currentState.row + move[0];
                         int nextCol = currentState.col + move[1];
@@ -388,7 +436,8 @@ public class Main {
                             board.set(nextRow * boardSize + nextCol);
                             State child = new State(nextRow, nextCol, currentState, board);
                             if (!isInThePath(child)) { // Avoid revisiting
-                                h2Values.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), calculateMinDistanceCorners(nextRow, nextCol, boardSize), child});
+                                h2Values.add(new Object[] { calculateH1b(child, boardSize, nextRow, nextCol),
+                                        calculateMinDistanceCorners(nextRow, nextCol, boardSize), child });
                             }
                         }
                     }
@@ -396,11 +445,13 @@ public class Main {
                         // First compare by the first integer value (descending order -> max first)
                         int firstComparison = (Integer) b[0] - (Integer) a[0]; // max first
 
-                        // If first integers are equal, compare by the second integer value (descending order -> max first)
+                        // If first integers are equal, compare by the second integer value (descending
+                        // order -> max first)
                         if (firstComparison == 0) {
                             return (Integer) b[1] - (Integer) a[1]; // max first
                         }
-                        return firstComparison; // If first integers are not equal, return the result of first comparison
+                        return firstComparison; // If first integers are not equal, return the result of first
+                                                // comparison
                     });
 
                     for (int i = 0; i < h2Values.size(); i++) {
@@ -408,28 +459,29 @@ public class Main {
                     }
                 }
 
-
             } else {
 
                 while (!stackFrontier.isEmpty()) {
 
+                    // Check the time limit
                     long endTime = System.currentTimeMillis();
                     if (endTime - startTime >= duration) {
 
                         timeoutFlag = true;
                         return false;
                     }
-                    // Chose a leaf node and remove it from the frontier
+                    // Choose a leaf node for expansion according to strategy and remove it from the
+                    // frontier
                     State currentState = stackFrontier.pop();
                     numberOfNodesExpanded++;
 
-                    // Goal state check
+                    // If goal state then return the corresponding solution
                     if (goalTest(currentState, strategy)) {
                         return true; // Solution found
                     }
 
-                    // Expand current node and add resulting nodes to the frontier
                     List<Object[]> h2Values = new ArrayList<>();
+                    // Expand current node and add resulting nodes to the frontier
                     for (int[] move : MOVES) {
                         int nextRow = currentState.row + move[0];
                         int nextCol = currentState.col + move[1];
@@ -437,7 +489,8 @@ public class Main {
                         if (isAvailable(nextRow, nextCol, boardSize)) {
                             State child = new State(nextRow, nextCol, currentState, new BitSet(0));
                             if (!isInThePath(child)) { // Avoid revisiting
-                                h2Values.add(new Object[]{calculateH1b(child, boardSize, nextRow, nextCol), calculateMinDistanceCorners(nextRow, nextCol, boardSize), child});
+                                h2Values.add(new Object[] { calculateH1b(child, boardSize, nextRow, nextCol),
+                                        calculateMinDistanceCorners(nextRow, nextCol, boardSize), child });
                             }
                         }
                     }
@@ -445,11 +498,13 @@ public class Main {
                         // First compare by the first integer value (descending order -> max first)
                         int firstComparison = (Integer) b[0] - (Integer) a[0]; // max first
 
-                        // If first integers are equal, compare by the second integer value (descending order -> max first)
+                        // If first integers are equal, compare by the second integer value (descending
+                        // order -> max first)
                         if (firstComparison == 0) {
                             return (Integer) b[1] - (Integer) a[1]; // max first
                         }
-                        return firstComparison; // If first integers are not equal, return the result of first comparison
+                        return firstComparison; // If first integers are not equal, return the result of first
+                                                // comparison
                     });
 
                     for (int i = 0; i < h2Values.size(); i++) {
@@ -461,7 +516,6 @@ public class Main {
 
         return false; // No solution found
     }
-
 
     public static boolean goalTest(State currentState, String strategy) {
 
@@ -482,7 +536,6 @@ public class Main {
         return false;
 
     }
-
 
     public static boolean isAvailable(int nextX, int nextY, int boardSize) {
         if (nextX >= 0 && nextY >= 0 && nextX < boardSize && nextY < boardSize) {
@@ -523,7 +576,6 @@ public class Main {
         return i == 1;
     }
 
-
     // Method that calculates the options
     private static int calculateH1b(State currentState, int boardSize, int row, int col) {
         int options = 0;
@@ -543,10 +595,10 @@ public class Main {
     private static int calculateMinDistanceCorners(int nextRow, int nextCol, int boardSize) {
         // Calculate distances to corners 0,0 ; 0,N-1 ; N-1,0; N-1;N-1
         int[] cornerDistances = {
-                Math.abs(nextRow) + Math.abs(nextCol),              // Top-left corner
-                Math.abs(nextRow) + Math.abs(nextCol - (boardSize - 1)),        // Top-right corner
-                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol),        // Bottom-left corner
-                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol - (boardSize - 1))   // Bottom-right corner
+                Math.abs(nextRow) + Math.abs(nextCol), // Top-left corner
+                Math.abs(nextRow) + Math.abs(nextCol - (boardSize - 1)), // Top-right corner
+                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol), // Bottom-left corner
+                Math.abs(nextRow - (boardSize - 1)) + Math.abs(nextCol - (boardSize - 1)) // Bottom-right corner
         };
 
         // Find the minimum distance to the corners
@@ -559,9 +611,9 @@ public class Main {
         return distanceToCorners;
     }
 
-
     public static boolean isSafeMove(int row, int col, State current, int boardSize) {
-        return row >= 0 && col >= 0 && row < boardSize && col < boardSize && !current.chessBoard.get(row * boardSize + col);
+        return row >= 0 && col >= 0 && row < boardSize && col < boardSize
+                && !current.chessBoard.get(row * boardSize + col);
     }
 
     // Print the path
@@ -578,5 +630,3 @@ public class Main {
         System.out.println();
     }
 }
-    
-
