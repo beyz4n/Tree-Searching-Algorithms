@@ -9,6 +9,7 @@ public class Main {
             {2, -1}, {1, -2}, {-1, -2}, {-2, -1}
     };
     static int totalMoves;
+    static int numberOfNodesExpanded = 0;
     private static boolean isSolutionWithBitSet = false;
     private static boolean timeoutFlag = false;
     private static FileWriter writer = null;
@@ -25,7 +26,6 @@ public class Main {
             System.exit(0);
         }
 
-       
         // Take the board size and search method from the user
         Scanner input = new Scanner(System.in);
         System.out.println("Enter a board size:");
@@ -79,6 +79,7 @@ public class Main {
 
         if (solutionFound) {
             System.out.println("A solution found.");
+            System.out.println("Number of nodes expanded: " + numberOfNodesExpanded);
         }  else if(solutionFound == false && timeoutFlag!= true){
             System.out.println("No solution exists.");
         }else{
@@ -118,6 +119,7 @@ public class Main {
                     }
 
                     State current = queueFrontier.poll();
+                    numberOfNodesExpanded++;
     
                     for (int[] move : MOVES) {
                         int newX = current.row + move[0];
@@ -149,6 +151,7 @@ public class Main {
                 }
 
                 State current = queueFrontier.poll();
+                numberOfNodesExpanded++;
 
                 for (int[] move : MOVES) {
                     int newX = current.row + move[0];
@@ -189,6 +192,7 @@ public class Main {
                             return false;
                         }
                         State currentState = stackFrontier.pop();
+                        numberOfNodesExpanded++;
             
                         // Goal check 
                         if (goalTest(currentState, strategy)) {
@@ -222,6 +226,7 @@ public class Main {
                 }
                 // Chose a leaf node and remove it from the frontier
                 State currentState = stackFrontier.pop(); 
+                numberOfNodesExpanded++;
     
                 // Goal state check
                 if (goalTest(currentState, strategy)) {
@@ -265,6 +270,7 @@ public class Main {
                             return false;
                         }
                         State currentState = stackFrontier.pop();
+                        numberOfNodesExpanded++;
     
                         // Goal check
                         if (goalTest(currentState, strategy)) {
@@ -306,6 +312,7 @@ public class Main {
                     }
                     // Chose a leaf node and remove it from the frontier
                     State currentState = stackFrontier.pop();
+                    numberOfNodesExpanded++;
 
                     // Goal state check
                     if (goalTest(currentState, strategy)) {
@@ -356,6 +363,7 @@ public class Main {
                             return false;
                         }
                         State currentState = stackFrontier.pop();
+                        numberOfNodesExpanded++;
     
                         // Goal check
                         if (goalTest(currentState, strategy)) {
@@ -408,6 +416,7 @@ public class Main {
                     }
                     // Chose a leaf node and remove it from the frontier
                     State currentState = stackFrontier.pop();
+                    numberOfNodesExpanded++;
 
                     // Goal state check
                     if (goalTest(currentState, strategy)) {
@@ -550,36 +559,10 @@ public class Main {
         return distanceToCorners;
     }
 
-    // Method that calculates the options and if there is a tie prefer the closer to the corners
-    private static int calculateH2(int[][] chessBoard, int x, int y, int N) {
-        int options = 0;
-        for (int i = 0; i < MOVES.length; i++) {
-            int nextX = x + MOVES[i][0];
-            int nextY = y + MOVES[i][1];
-            if (isSafe(nextX, nextY, chessBoard, N)) {
-                options++;
-            }
-        }
-        return options;
-    }
-
-    // TODO: isSafe method will be deleted
-    // Check if a cell is within bounds and unvisited
-    private static boolean isSafe(int row, int col, int[][] chessBoard, int N) {
-
-        boolean isPositionInBoard = (row >= 0 && row < N && col >= 0 && col < N);
-        if (isPositionInBoard == false) {
-            return false;
-        }
-        boolean notVisited = (chessBoard[row][col] == 0);
-        return isPositionInBoard && notVisited;
-    }
 
     public static boolean isSafeMove(int row, int col, State current, int boardSize) {
         return row >= 0 && col >= 0 && row < boardSize && col < boardSize && !current.chessBoard.get(row * boardSize + col);
     }
-
-
 
    // Print the path 
    private static void printPath(List<State> path) {
