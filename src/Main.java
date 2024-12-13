@@ -1,3 +1,5 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class Main {
@@ -9,15 +11,31 @@ public class Main {
     static int totalMoves;
     private static boolean isSolutionWithBitSet = false;
     private static boolean timeoutFlag = false;
+    private static FileWriter writer = null;
+
     public static void main(String[] args) {
         
         boolean solutionFound = false;
-       
 
+        try {
+            writer = new FileWriter("moves.txt");
+        }
+        catch (Exception e) {
+            System.out.println("Cannot open a file!");
+            System.exit(0);
+        }
+
+       
         // Take the board size and search method from the user
         Scanner input = new Scanner(System.in);
         System.out.println("Enter a board size:");
         int boardSize = input.nextInt();
+        try {
+            writer.write("N = " + boardSize + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+       
 
         Scanner input2 = new Scanner(System.in);
         System.out.println("Enter a search method:(a-d)");
@@ -57,9 +75,7 @@ public class Main {
             System.out.println("Out of Memory");
              throw new OutOfMemoryError();
            }
-             
-       
-       
+                 
 
         if (solutionFound) {
             System.out.println("A solution found.");
@@ -68,10 +84,12 @@ public class Main {
         }else{
             System.out.println("Timeout.");
         }
-          
+        try {
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-
-  
 
     public static boolean treeSearch(String strategy, State startState, int boardSize, long startTime, long duration){
 
@@ -567,6 +585,11 @@ public class Main {
    private static void printPath(List<State> path) {
     System.out.println("Knight's Tour Path:");
     for (State state : path) {
+        try {
+            writer.write(state.row + ", " + state.col + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         System.out.printf("(%d, %d) -> ", state.row, state.col);
     }
     System.out.println("END");
